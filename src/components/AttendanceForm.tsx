@@ -138,9 +138,13 @@ export default function AttendanceForm({ site }: Props) {
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <Link to="/" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Back to Sites
+          <Link 
+            to="/" 
+            className="inline-flex items-center mb-6 opacity-0 pointer-events-auto"
+            style={{ color: 'transparent' }}
+          >
+            <ArrowLeft className="h-5 w-5 mr-2 opacity-0" />
+            <span className="opacity-0">Back to Sites</span>
           </Link>
         </motion.div>
 
