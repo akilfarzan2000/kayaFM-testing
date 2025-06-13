@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ClipboardCheck, Loader2, X, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ClipboardCheck, Loader2, X, CheckCircle2, ArrowLeft, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SiteConfig } from '../data/sites';
 
@@ -21,6 +21,7 @@ interface Props {
 }
 
 export default function AttendanceForm({ site }: Props) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     status: '',
@@ -31,10 +32,40 @@ export default function AttendanceForm({ site }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [touched, setTouched] = useState({
     fullName: false,
     status: false,
   });
+
+  // Timer effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          navigate('/timed-out', { replace: true });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [navigate]);
+
+  // Prevent back navigation after timeout
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (timeLeft === 0) {
+        event.preventDefault();
+        navigate('/timed-out', { replace: true });
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [timeLeft, navigate]);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -113,6 +144,9 @@ export default function AttendanceForm({ site }: Props) {
         time: currentTime
       });
       
+      // Clear the timer on successful submission
+      setTimeLeft(0);
+      
       setShowSuccess(true);
       setFormData({ fullName: '', status: '' });
       setTouched({ fullName: false, status: false });
@@ -128,6 +162,12 @@ export default function AttendanceForm({ site }: Props) {
       return 'This field is required';
     }
     return '';
+  };
+
+  const getTimerColor = () => {
+    if (timeLeft <= 10) return 'text-red-500 bg-red-50 border-red-200';
+    if (timeLeft <= 20) return 'text-orange-500 bg-orange-50 border-orange-200';
+    return 'text-green-500 bg-green-50 border-green-200';
   };
 
   return (
@@ -146,6 +186,21 @@ export default function AttendanceForm({ site }: Props) {
             <ArrowLeft className="h-5 w-5 mr-2 opacity-0" />
             <span className="opacity-0">Back to Sites</span>
           </Link>
+        </motion.div>
+
+        {/* Timer Display */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className={`mb-6 p-4 rounded-lg border-2 ${getTimerColor()} text-center`}
+        >
+          <div className="flex items-center justify-center">
+            <Timer className="h-5 w-5 mr-2" />
+            <span className="font-bold text-lg">
+              Session expires in: {timeLeft}s
+            </span>
+          </div>
         </motion.div>
 
         <motion.div
