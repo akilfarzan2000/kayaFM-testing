@@ -33,6 +33,7 @@ export default function AttendanceForm({ site }: Props) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
+  const [isTimedOut, setIsTimedOut] = useState(false);
   const [touched, setTouched] = useState({
     fullName: false,
     status: false,
@@ -44,6 +45,7 @@ export default function AttendanceForm({ site }: Props) {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
+          setIsTimedOut(true);
           navigate('/timed-out', { replace: true });
           return 0;
         }
@@ -54,10 +56,23 @@ export default function AttendanceForm({ site }: Props) {
     return () => clearInterval(timer);
   }, [navigate]);
 
+  // Tab visibility detection - timeout when user switches tabs
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && !isTimedOut && !showSuccess) {
+        setIsTimedOut(true);
+        navigate('/timed-out', { replace: true });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [navigate, isTimedOut, showSuccess]);
+
   // Prevent back navigation after timeout
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      if (timeLeft === 0) {
+      if (isTimedOut || timeLeft === 0) {
         event.preventDefault();
         navigate('/timed-out', { replace: true });
       }
@@ -65,7 +80,7 @@ export default function AttendanceForm({ site }: Props) {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [timeLeft, navigate]);
+  }, [timeLeft, navigate, isTimedOut]);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -110,7 +125,7 @@ export default function AttendanceForm({ site }: Props) {
       return;
     }
 
-    if (isSubmitting) return;
+    if (isSubmitting || isTimedOut) return;
     setShowConfirmation(true);
   };
 
@@ -321,7 +336,7 @@ export default function AttendanceForm({ site }: Props) {
 
             <motion.button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isTimedOut}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6 }}

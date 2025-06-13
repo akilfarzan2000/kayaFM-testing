@@ -1,7 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, QrCode, Home } from 'lucide-react';
+import { Clock, QrCode } from 'lucide-react';
 
 export default function TimedOut() {
   return (
@@ -51,27 +50,13 @@ export default function TimedOut() {
           <span className="text-blue-700 font-medium">Scan QR Code to Continue</span>
         </motion.div>
 
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center w-full px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200 shadow-sm"
-          >
-            <Home className="h-5 w-5 mr-2" />
-            Return to Site Selection
-          </Link>
-        </motion.div>
-
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.6 }}
           className="text-xs text-gray-500 mt-4"
         >
-          Sessions automatically expire after 30 seconds of inactivity
+          Sessions automatically expire after 30 seconds of inactivity or when switching tabs
         </motion.p>
       </motion.div>
     </div>
